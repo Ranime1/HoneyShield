@@ -1,0 +1,38 @@
+# Environnement Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets et identifiants
+config/*.env
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Journaux
+logs/
+*.log
+*.jsonl
+
+# Sauvegardes et archives
+*.tar.gz
+*.zip
+*.ova
+*.vdi
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*~
+.DS_Store
+
+# Anciennes versions et sauvegardes
+engine/*backup*
+engine/*avant*
+engine/*valide*
+engine/*phase4*
