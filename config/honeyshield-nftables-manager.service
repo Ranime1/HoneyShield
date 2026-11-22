@@ -1,0 +1,19 @@
+[Unit]
+Description=HoneyShield AI - nftables Manager (MongoDB decisions)
+Wants=network-online.target
+After=network-online.target nftables.service honeyshield-monitor.service
+Requires=nftables.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/adminhs/honeyshield-ai
+ExecStart=/home/adminhs/honeyshield-ai/.venv/bin/python -u /home/adminhs/honeyshield-ai/engine/nftables_manager.py --watch --apply
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

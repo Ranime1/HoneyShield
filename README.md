@@ -189,3 +189,73 @@ Potential improvements include:
 This project is intended for educational use in an isolated, authorized virtual laboratory.
 
 Do not commit real passwords, SSH private keys, MongoDB credentials or sensitive security logs to the repository.
+
+
+## Automated Security Response — nftables Manager
+
+HoneyShield AI includes an automated security response mechanism based on Suricata, Python, MongoDB, and nftables.
+
+### Architecture
+
+The security monitoring process collects Suricata alerts and generates an initial decision. The Threat History Analyzer calculates a historical risk score using security events stored in MongoDB.
+
+The `nftables_manager.py` component retrieves the resulting decision and score from the `security_decisions` collection, evaluates the appropriate response, and dynamically updates nftables.
+
+**Processing flow:**
+
+Suricata → Realtime Monitor → Threat History Analyzer → MongoDB → nftables Manager → nftables
+
+Successful firewall modifications are recorded in the MongoDB `firewall_changes` collection.
+
+### Decision Policy
+
+| Initial Decision | Historical Score | Final Action |
+|---|---|---|
+| MONITOR | 0–59 | NO_CHANGE |
+| MONITOR | 60–100 | REDIRECT |
+| INVESTIGATE | 0–59 | NO_CHANGE |
+| INVESTIGATE | 60–79 | REDIRECT |
+| INVESTIGATE | 80–100 | BLOCK |
+
+The manager supports three actions:
+
+- **NO_CHANGE:** Preserve existing firewall rules.
+- **REDIRECT:** Add the source IP to the `redirected_sources` nftables set. SSH connections to the designated HoneyShield honeypot endpoint are redirected to Cowrie.
+- **BLOCK:** Add the source IP to the `blocked_sources` nftables set, preventing its forwarded traffic through the configured firewall policy.
+
+BLOCK takes priority over REDIRECT. Explicit UNBLOCK functionality allows the administrator to remove a restriction.
+
+### Technical Implementation
+
+- `engine/nftables_manager.py`: Decision evaluation, nftables updates, MongoDB monitoring, change logging, and administrative actions.
+- `config/nftables.nft`: Firewall configuration, filtering rules, dynamic sets, and NAT redirection.
+- `config/honeyshield-nftables-manager.service`: systemd service configuration for continuous execution.
+- MongoDB `security_decisions`: Source of decisions and historical scores.
+- MongoDB `firewall_changes`: Audit trail for effective firewall modifications.
+
+The manager keeps track of processed decisions using local SQLite state, avoiding reliance solely on MongoDB ObjectId ordering.
+
+### Validation Results
+
+The following laboratory scenarios were successfully tested:
+
+1. MONITOR with score 35 → NO_CHANGE.
+2. MONITOR with score 70 → REDIRECT.
+3. INVESTIGATE with score 90 → BLOCK.
+4. SSH redirection from Kali Linux to Cowrie.
+5. HTTP connection blocked after adding the Kali IP to the blocking set.
+6. Manual UNBLOCK and restoration of HTTP access.
+7. Audit logging in MongoDB.
+8. Automatic processing of new decisions through systemd.
+
+The REDIRECT and BLOCK automation tests used controlled test decisions inserted into MongoDB. They validate the response mechanism, not the accuracy of attack detection.
+
+### Scope and Limitations
+
+This implementation is a cybersecurity laboratory prototype. Automatic actions are restricted to the designated Kali Linux source IP.
+
+The historical risk score and decision thresholds are experimental. The redirect mechanism applies to the configured SSH honeypot endpoint.
+
+Restoration after reloading nftables has been tested. Full virtual-machine reboot persistence has not been validated.
+
+The Deep Learning integration is outside the scope of this validation.
