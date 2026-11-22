@@ -36,3 +36,35 @@ engine/*backup*
 engine/*avant*
 engine/*valide*
 engine/*phase4*
+
+
+# Secrets
+*.env
+!*.env.example
+.env
+*.key
+*.pem
+
+# Runtime et bases locales
+logs/
+*.log
+*.jsonl
+*.sqlite
+*.sqlite3
+*.db
+config/nftables_manager_state.json
+config/nftables_manager_state.db
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Sauvegardes et captures temporaires
+engine/*backup*
+engine/*avant*
+engine/*valide*
+engine/*v1*
+engine/*v2*
+*.ova
+*.zip
